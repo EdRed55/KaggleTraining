@@ -69,6 +69,13 @@ print(train["Survived"][train["Sex"] == 'female'].value_counts(normalize = True)
 
 
 ######################################### C1 P5 Define Child column using Age column #########################################
+
+#Check to see if there are any NaN values in the training data
+train.isnull().any()
+
+#For any NA values of Age, set them to the median
+train["Age"] = train["Age"].fillna(train["Age"].median())
+
 # Create the column Child and assign to 'NaN'
 train["Child"] = float('NaN')
 
