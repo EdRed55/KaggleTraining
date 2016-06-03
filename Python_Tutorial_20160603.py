@@ -26,9 +26,6 @@ train.describe()
 #Get dimension of pandas object like dim() in R
 train.shape
 
-#Get dimension of pandas object like dim() in R for a second time
-train.shape
-
 
 ######################################### C1 P4 Get some counts of the data #########################################
 
