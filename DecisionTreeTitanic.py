@@ -7,6 +7,11 @@ import numpy as np
 
 #Import 'tree' from scikit-learn library
 from sklearn import tree
+from sklearn.tree import export_graphviz
+
+#Needed for graphing decision tree
+from sklearn.externals.six import StringIO  
+import pydotplus 
 
 # Load the train and test datasets to create two DataFrames
 train_url = "http://s3.amazonaws.com/assets.datacamp.com/course/Kaggle/train.csv"
@@ -52,12 +57,20 @@ train = PreProcessingBeforeModel(train)
 
 
 # Create the target and features numpy arrays: target, features_one
-target = train["Survived"].values
-features_one = train[["Pclass", "Sex", "Age", "Fare"]].values
+target_names = "Survived"
+target = train[target_names].values
+feature_names = ["Pclass", "Sex", "Age", "Fare"]
+features_one = train[feature_names].values
 
 # Fit your first decision tree: my_tree_one
 my_tree_one = tree.DecisionTreeClassifier()
 my_tree_one = my_tree_one.fit(features_one, target)
+
+#Visualize decision tree
+dot_data = StringIO() 
+tree.export_graphviz(my_tree_one, out_file=dot_data, feature_names=feature_names, class_names=target_names, filled=True, rounded=True,  special_characters=True) 
+graph = pydotplus.graph_from_dot_data(dot_data.getvalue()) 
+graph.write_pdf("Titanic.pdf") 
 
 #Clean up testing data
 test = PreProcessingBeforeModel(test)
