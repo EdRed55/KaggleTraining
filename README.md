@@ -7,6 +7,8 @@ Next steps:
     -Add in cross validation to decision tree using (http://scikit-learn.org/stable/modules/cross_validation.html) (done)
     -Recreate DecisionTreeTitanic in R (done)
     -Type up summary of cross validation
+    -make cross validation function more general to be used for loss cost models rather than just classfication trees
+    -Re do with company data
     -What to do after cross validation occurs? Refit model with all data included?
     -Create stand alone files for other methods used in Python_Tutorial_20160603.py
 
