@@ -13,6 +13,9 @@ from sklearn.tree import export_graphviz
 from sklearn.externals.six import StringIO  
 import pydotplus 
 
+#Needed for cross validation
+from sklearn import cross_validation
+
 # Load the train and test datasets to create two DataFrames
 train_url = "http://s3.amazonaws.com/assets.datacamp.com/course/Kaggle/train.csv"
 train = pd.read_csv(train_url)
@@ -62,9 +65,31 @@ target = train[target_names].values
 feature_names = ["Pclass", "Sex", "Age", "Fare"]
 features_one = train[feature_names].values
 
-# Fit your first decision tree: my_tree_one
+# Fit a decision tree: my_tree_one
 my_tree_one = tree.DecisionTreeClassifier()
 my_tree_one = my_tree_one.fit(features_one, target)
+
+#Get accuracy of predictions on training dataset
+print(my_tree_one.score(features_one, target))
+
+#Carry out cross validation to get a more accurate picture of how the model will perform for future predictions. The cross validation result turns out to be about  20% lower than accuracy based solely on the training data. This indicates that the model is likely overfit to the training data.
+scores = cross_validation.cross_val_score(my_tree_one, features_one, target, cv=10)
+np.mean(scores)
+
+#Prune the tree in order to reduce overfitting
+#Control overfitting by setting "max_depth" to 10 and "min_samples_split" to 5 : my_tree_one
+max_depth = 10
+min_samples_split = 5
+my_tree_one = tree.DecisionTreeClassifier(max_depth = max_depth, min_samples_split = min_samples_split, random_state = 1)
+my_tree_one = my_tree_one.fit(features_one, target)
+
+#Get accuracy of predictions on training dataset
+print(my_tree_one.score(features_one, target))
+
+#Carry out cross validation to get a more accurate picture of how the model will perform for future predictions. The cross validation result turns out to be about  9% lower than accuracy based solely on the training data. This indicates that the model is not overfitting as badly.
+scores = cross_validation.cross_val_score(my_tree_one, features_one, target, cv=10)
+np.mean(scores)
+
 
 #Visualize decision tree
 dot_data = StringIO() 
