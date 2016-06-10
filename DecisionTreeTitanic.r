@@ -158,6 +158,70 @@ Gini_EJR <- function(y_true, y_pred){
 
 Gini_EJR(y_true, y_pred)
 
+### Other version of Gini coefficent (source: https://www.kaggle.com/wiki/RCodeForGini)
+#"NormalizedGini" is the other half of the metric. This function does most of the work, though
+SumModelGini <- function(solution, submission) {
+  df = data.frame(solution = solution, submission = submission)
+  df <- df[order(df$submission, decreasing = TRUE),]
+  df
+  df$random = (1:nrow(df))/nrow(df)
+  df
+  totalPos <- sum(df$solution)
+  df$cumPosFound <- cumsum(df$solution) # this will store the cumulative number of positive examples found (used for computing "Model Lorentz")
+  df$Lorentz <- df$cumPosFound / totalPos # this will store the cumulative proportion of positive examples found ("Model Lorentz")
+  df$Gini <- df$Lorentz - df$random # will store Lorentz minus random
+  #print(df)
+  return(sum(df$Gini))
+}
+
+NormalizedGini <- function(solution, submission) {
+  SumModelGini(solution, submission) / SumModelGini(solution, solution)
+}
+
+#Produces the exact same value as Gini_EJR
+NormalizedGini(y_true, y_pred)
+
+test1 <- c(rep(0, 20), rep(1,30), rep(0, 10))
+test2 <- c(rep(1, 20), rep(1,30), rep(0, 10))
+
+Gini_EJR(test1, test2)
+NormalizedGini(test1, test2)
+
+#Using example from pdf document
+Gini_EJR_2 <- function(y_true, y_pred){
+    #get number of samples
+    n_samples = length(y_true)
+    
+    # sort rows on prediction column 
+    # (from largest to smallest)
+    #true_order <- y_true[order(y_true, decreasing=TRUE)]
+    pred_order <- y_true[order(y_pred, decreasing=TRUE)]
+
+    
+    #arr = t(matrix(y_true, y_pred))
+    #true_order = arr[arr[:,0].argsort()][::-1,0]
+    #pred_order = arr[arr[:,1].argsort()][::-1,0]
+    
+    
+    
+    # get Lorenz curves
+    #L_true = cumsum(true_order) / sum(true_order)
+    L_pred = cumsum(pred_order) / sum(pred_order)
+    L_ones = seq(1/n_samples, 1, length.out=n_samples)
+    
+    # get Gini coefficients (area between curves)
+    #G_true = sum(L_ones - L_true)
+    G_pred = (sum(L_pred - L_ones)/n_samples)*2
+    
+    # normalize to true Gini coefficient
+    return(G_pred)
+}
+
+Gini_EJR_2(y_true, y_pred)
+
+Gini_EJR_2(c(0, 0, 0, 1), c(.25, .5, .75, 1))
+
+
 
 # plot tree
 plot(my_tree_one, uniform=TRUE, main="Classification Tree for Titanic")
