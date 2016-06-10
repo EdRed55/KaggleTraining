@@ -1,10 +1,10 @@
 ######################################### R program to fit a decision tree, and carry out cross validation #########################################
 
 ######################################### C2 P1 Import needed packages for math and machine decision trees #########################################
+
+#Needed to create classfication function
 #install.packages("rpart", dep=TRUE)
 library(rpart)
-
-
 
 # Load the train and test datasets to create two DataFrames
 train_url = "http://s3.amazonaws.com/assets.datacamp.com/course/Kaggle/train.csv"
@@ -62,11 +62,10 @@ my_tree_one <- eval(parse(text=Model_char))
 sum(predict(my_tree_one, type="class") == train_fit[,target_names])/dim(train)[1]
 
 #Carry out cross validation to get a more accurate picture of how the model will perform for future predictions. The cross validation result turns out to be about  20% lower than accuracy based solely on the training data. This indicates that the model is likely overfit to the training data.
-#########################################################################################################
 
 #Function that repeats k times: randomly splits data into K folds, fits model on k-1 folds and tests accuracy of fitted data against the kth training set
 #Accuracy is based upon successful prediction classifications, function would need to be enhanced to cover cover non classification models
-K_Fold_CrossValidation_EJR <- function(train_fit, Response, Model_char, k){
+K_Fold_CrossValidation_EJR <- function(train_fit, target_names, Model_char, k){
 
 
     # sample from 1 to k, nrow times (the number of observations in the data)
@@ -94,7 +93,7 @@ K_Fold_CrossValidation_EJR <- function(train_fit, Response, Model_char, k){
       rm(train_fit_temp)
                                                          
       # make prediction and calculate the accurary on the testing data
-      temp <- sum(predict(mymodel, testset[,!is.element(names(testset), Response)], type="class") == testset[,c(Response)])/dim(testset)[1]
+      temp <- sum(predict(mymodel, testset[,!is.element(names(testset), target_names)], type="class") == testset[,c(target_names)])/dim(testset)[1]
 
       # append this iteration's predictions to the end of the prediction data frame
       prediction <- c(prediction, temp)
@@ -104,11 +103,8 @@ K_Fold_CrossValidation_EJR <- function(train_fit, Response, Model_char, k){
     return(mean(prediction))
 }
 
-K_Fold_CrossValidation_EJR(train_fit, Response, Model_char, 10)
+K_Fold_CrossValidation_EJR(train_fit, target_names, Model_char, 10)
 
-
-
-######################################################################################################################
 
 #Prune the tree in order to reduce overfitting
 #Control overfitting by setting 
@@ -120,8 +116,47 @@ my_tree_one <- eval(parse(text=Model_char))
 sum(predict(my_tree_one, type="class") == train_fit[,target_names])/dim(train)[1]
 
 #Carry out cross validation to get a more accurate picture of how the model will perform for future predictions. The cross validation result turns out to be about  11% lower than accuracy based solely on the training data. This indicates that the model is not overfitting as badly.
-K_Fold_CrossValidation_EJR(train_fit, Response, Model_char, 10)
+K_Fold_CrossValidation_EJR(train_fit, target_names, Model_char, 10)
 
+
+# Simple implementation of the (normalized) gini score in numpy
+# Fully vectorized, no loops,
+
+y_true <- train_fit[,target_names]
+y_pred <- as.numeric(as.character(predict(my_tree_one, type="class")))
+
+#write.csv(data.frame(y_true, y_pred), file="Output/Gini_0610")
+
+Gini_EJR <- function(y_true, y_pred){
+    #get number of samples
+    n_samples = length(y_true)
+    
+    # sort rows on prediction column 
+    # (from largest to smallest)
+    true_order <- y_true[order(y_true, decreasing=TRUE)]
+    pred_order <- y_true[order(y_pred, decreasing=TRUE)]
+
+    
+    #arr = t(matrix(y_true, y_pred))
+    #true_order = arr[arr[:,0].argsort()][::-1,0]
+    #pred_order = arr[arr[:,1].argsort()][::-1,0]
+    
+    
+    
+    # get Lorenz curves
+    L_true = cumsum(true_order) / sum(true_order)
+    L_pred = cumsum(pred_order) / sum(pred_order)
+    L_ones = seq(1/n_samples, 1, length.out=n_samples)
+    
+    # get Gini coefficients (area between curves)
+    G_true = sum(L_ones - L_true)
+    G_pred = sum(L_ones - L_pred)
+    
+    # normalize to true Gini coefficient
+    return(G_pred/G_true)
+}
+
+Gini_EJR(y_true, y_pred)
 
 
 # plot tree
